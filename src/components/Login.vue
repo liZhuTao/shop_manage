@@ -4,27 +4,37 @@
             <div class="Login_title">湖工e购管理系统</div>
         </div>
         <div class="login_box">
-            <el-form label-width="0px" class="login_form">
+            <el-form 
+            :model="loginForm" 
+            :rules="loginFormRules" 
+            ref="loginFormRef"
+            label-width="0px" 
+            class="login_form"
+            >
                 <!-- 用户名 -->
-                <el-form-item>
+                <el-form-item prop="username">
                     <el-input 
                     prefix-icon="el-icon-user-solid"
-                    v-model="form.name"></el-input>
+                    v-model="loginForm.username"
+                    ></el-input>
                 </el-form-item>
                 <!-- 密码 -->
-                <el-form-item>
+                <el-form-item prop="password">
                     <el-input 
                     prefix-icon="el-icon-lock"
-                    v-model="form.pws"></el-input>
+                    v-model="loginForm.password"
+                    type="password"></el-input>
                 </el-form-item>
                 <!-- 按钮区 -->
                 <el-form-item>
-                    <el-button type="primary" class="login_button">登录</el-button>
+                    <el-button type="primary" class="login_button" @click="login">登录</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-button 
                     type="text" 
-                    class="login_forget" @click="dialogVisible = true">忘记密码？</el-button>
+                    class="login_forget" 
+                    @click="dialogVisible = true"
+                    >忘记密码？</el-button>
                     <el-dialog
                     title="提示"
                     :visible.sync="dialogVisible"
@@ -44,13 +54,27 @@
 
 <script>
 export default {
-    data(){return {
-        form:{
-            name:"admin",
-            pws:123456
-        },
-         dialogVisible: false
-    }},
+    data(){
+        return {
+            //登录表单数据
+            loginForm:{
+                username:"admin",
+                password:"123456"
+            },
+            dialogVisible: false,   //弹出框提示
+            //表单验证规则对象
+            loginFormRules:{
+                username: [
+                    { required: true, message: '请输入用户名', trigger: 'blur' },
+                    { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: '请输入密码', trigger: 'blur' },
+                    { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
+                ]
+            }
+        }
+    },
     methods:{
         handleClose(done) {
         this.$confirm('确认关闭？')
@@ -58,7 +82,20 @@ export default {
             done();
           })
           .catch(_ => {});
-      }
+        },
+        login(){
+            this.$refs.loginFormRef.validate(async valid=>{
+                if(!valid) return;
+                let { data:res } = await this.$http.post('login',this.loginForm);
+                if(res.meta.status !== 200) return this.$massage.error('登录失败！');
+                this.$massage.success('登录成功');
+                //存储登录的token值
+                console.log(res)
+                window.sessionStorage.setItem('token',res.data.token);
+                //登录成功页面跳转
+                this.$router.push('/home')
+            })
+        }
     }
 };
 </script>

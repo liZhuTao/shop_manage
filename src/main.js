@@ -2,13 +2,20 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button,Form,FormItem,Input,Dialog } from 'element-ui'
+import { Button,Form,FormItem,Input,Dialog,Message } from 'element-ui'
 //导入全局样式表
 import '@/assets/css/global.css'
+//导入axios
+import axios from 'axios'
+//配置请求根路径
+axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
+Vue.prototype.$http = axios
 
 console.log(Button)
 
 Vue.use(Button).use(Form).use(FormItem).use(Input).use(Dialog)
+//挂载弹框组件
+Vue.prototype.$massage = Message;
 
 Vue.config.productionTip = false
 
