@@ -97,12 +97,12 @@ export default {
             })
         }
     }
-};
+}
 </script>
 
 <style lang="less" scoped>
 .login_container {
-  background-image: url(../assets/login.png);
+  background-image: url(../../assets/login.png);
   height: 100%;
   .Login_title {
     font-size: 40px;
