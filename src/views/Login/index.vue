@@ -88,9 +88,8 @@ export default {
                 if(!valid) return;
                 let { data:res } = await this.$http.post('login',this.loginForm);
                 if(res.meta.status !== 200) return this.$massage.error('登录失败！');
-                this.$massage.success('登录成功');
+                this.$message.success('登录成功');
                 //存储登录的token值
-                console.log(res)
                 window.sessionStorage.setItem('token',res.data.token);
                 //登录成功页面跳转
                 this.$router.push('/home')
