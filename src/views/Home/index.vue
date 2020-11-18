@@ -52,7 +52,7 @@
     height: 100%;
 }
 .el-header{
-    background-color: #696FA4;
+    background-color: #383E4A;
     display: flex;
     justify-content: space-between;
     align-items: center;

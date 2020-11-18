@@ -7,6 +7,7 @@
     router
     :collapse="collapse"
     :collapse-transition="false"
+    :default-active="activePath"
     >
     <!-- 一级菜单 -->
     <el-submenu :index="item.id + '' " v-for="item in menulist" :key="item.id">
@@ -16,7 +17,12 @@
         <span>{{ item.authName }}</span>
       </template>
       <!-- 二级菜单 -->
-      <el-menu-item :index="'/' + subItem.path" v-for="subItem in item.children" :key="subItem.id">
+      <el-menu-item 
+        :index="'/' + subItem.path" 
+        v-for="subItem in item.children" 
+        :key="subItem.id"
+        @click="saveNavState('/' + subItem.path)"
+        >
         <template slot="title">
           <i class="el-icon-menu"></i>
           <span>{{ subItem.authName }}</span>
@@ -38,12 +44,13 @@ export default {
                 '101':'el-icon-s-goods',
                 '102':'el-icon-s-order',
                 '145':'el-icon-data-line'
-
-            }
+            },
+            activePath:''
         }
     },
     created(){
         this.getMenuList()
+        this.activePath = window.sessionStorage.getItem('activePath')
     },
     methods:{
         //获取菜单信息
@@ -54,6 +61,11 @@ export default {
                 if(result.meta.status !== 200) return this.$message.error(result.meta.msg)
                 this.menulist = result.data
             })
+        },
+        //保存链接的激活状态
+        saveNavState(activePath){
+          window.sessionStorage.setItem('activePath',activePath)
+          this.activePath = activePath;
         }
     }
 };
