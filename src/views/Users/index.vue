@@ -12,12 +12,17 @@
       <!-- 搜索与添加 -->
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-input placeholder="请输入内容" class="input-with-select">
-            <el-button slot="append" icon="el-icon-search"></el-button>
+          <el-input placeholder="请输入内容"
+          v-model="queryInfo.query"
+          class="input-with-select"
+          clearable
+          @clear="getUserList"
+          >
+            <el-button slot="append" icon="el-icon-search" @click="getUserList"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary">添加用户</el-button>
+          <el-button type="primary" @click="addDialogVisible=true">添加用户</el-button>
         </el-col>
       </el-row>
 
@@ -32,6 +37,7 @@
           <template slot-scope="scope">
             <el-switch
               v-model="scope.row.mg_state"
+              @change="userStateChange(scope.row)"
             >
             </el-switch>
           </template>
@@ -62,12 +68,86 @@
         :total="total">
         </el-pagination>
     </el-card>
+  <!-- 添加用户的对话框 -->
+    <el-dialog
+      title="添加用户"
+      :visible.sync="addDialogVisible"
+      width="50%"
+      @close="addDialogClosed">
+      <!-- 内容主体区 -->
+      <el-form 
+        :model="addForm" 
+        :rules="addFormRules" 
+        ref="addFormRef"
+        label-width="70px" 
+        >
+            <!-- 用户名 -->
+            <el-form-item 
+            label="用户名"
+            prop="username">
+                <el-input 
+                v-model="addForm.username"
+                ></el-input>
+            </el-form-item>
+            <!-- 密码 -->
+            <el-form-item 
+            label="密码"
+            prop="password">
+                <el-input 
+                v-model="addForm.password"
+                ></el-input>
+            </el-form-item>
+            <!-- 邮箱 -->
+            <el-form-item 
+            label="邮箱"
+            prop="email">
+                <el-input 
+                v-model="addForm.email"
+                ></el-input>
+            </el-form-item>
+            <!-- 用户名 -->
+            <el-form-item 
+            label="手机"
+            prop="mobile">
+                <el-input 
+                v-model="addForm.mobile"
+                ></el-input>
+            </el-form-item>
+            
+            
+        </el-form>
+      <!-- 底部区 -->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 export default {
   data() {
+    //验证邮箱的规则
+    var checkEmail = (rule,value,cb)=>{
+      const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+([a-zA-Z0-9_-])+/;
+
+      if(regEmail.test(value)){
+        //邮箱合法
+        return cb();
+      }
+      cb(new Error('请输入合法的邮箱'))
+    }
+    //验证手机号的规则
+    var checkMobile = (rule,value,cb)=>{
+      const regMobile = /^(0|86|17951)?(13[0-9]|15[012356789]|17[345678]|18[0-9]|14[57])[0-9]{8}$/;
+
+      if(regMobile.test(value)){
+        //手机号合法
+        return cb();
+      }
+      cb(new Error('请输入合法的手机号'))
+    }
     return {
       // 获取用户列表的参数列表
       queryInfo: {
@@ -77,6 +157,29 @@ export default {
       },
       userlist: [],
       total: 0,
+      addDialogVisible:false,   //控制添加用户的对话框的显示和隐藏
+      addForm:{ //添加用户的表单数据
+        username:'',
+        password:'',
+        email:'',
+        mobile:''
+      },
+      addFormRules:{  //添加表单的验证规则
+        username:[
+          {required:true,message:'请输入用户名',trigger:'blur'},
+          {min:3,max:10,message:'用户名的长度在3~10个字符之间',trigger:'blur'}
+        ],
+        password:[
+          {required:true,message:'请输入密码',trigger:'blur'},
+          {min:6,max:15,message:'用户名的长度在3~10个字符之间',trigger:'blur'}
+        ],
+        email:[
+          {required:true,message:'请输入邮箱',trigger:'blur'},{validator:checkEmail,trigger:'blur'}
+        ],
+        mobile:[
+          {required:true,message:'请输入手机号',trigger:'blur'},{validator:checkMobile,trigger:'blur'}
+        ]
+      },
     };
   },
   created() {
@@ -105,6 +208,36 @@ export default {
         // console.log(newPage)
          this.queryInfo.pagenum = newPage;
         this.getUserList();
+    },
+    //监听 switch开关状态
+    async userStateChange(userinfo){
+      // console.log(userinfo)
+      const {data:res} = await this.$http.put(`users/${userinfo.id}/state/${userinfo.mg_state}`);
+      if(res.meta.status !== 200){
+        userinfo.mg_state = !userinfo.mg_state;
+        return this.$massage.error('更新用户状态失败！')
+      }
+      this.$message.success('更新用户状态成功！')
+    },
+    //监听添加用户的对话框的关闭事件
+    addDialogClosed(){
+      this.$refs.addFormRef.resetFields()
+    },
+    //点击确定添加用户
+    addUser(){
+      this.$refs.addFormRef.validate(async valid=>{
+        if(!valid) return ;
+        //发送添加用户的网络请求
+        const {data:res} = await this.$http.post('users',this.addForm)
+
+        if(res.meta.status !== 201){
+          this.$message.error('添加用户失败！')
+        }
+        this.$message.success('添加用户失败！');
+        this.addDialogVisible = false;
+        //重新获取用户列表数据
+        this.getUserList()
+      })
     }
   },
 };
